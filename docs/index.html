@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,7 +21,7 @@
     <h1>Where to measure next</h1>
     <p class="lead">Gaussian-process models help us decide where to measure next by predicting both the outcome and
     its uncertainty. But that uncertainty also depends on the boundaries of the region we can explore. A rule that
-    selects the most uncertain location can therefore favour edges and corners, regardless of the measured values.</p>
+    selects the most uncertain location can therefore favor edges and corners, regardless of the measured values.</p>
     <p class="lead-sub">In three papers, we study why this happens, how to correct it when learning a whole function,
     and what it means when searching for the best experimental setting.</p>
   </div>
@@ -43,11 +43,16 @@
   fixed model settings, neither uses the measured values. The geometric weight changes the spatial preference of
   uncertainty-based sampling.</p>
   <details class="math">
-    <summary>Details</summary>
+    <summary>How the two rules choose a measurement</summary>
+    <p>Let σ<sub>N</sub>(x) be the uncertainty after N measurements. The two scores are</p>
+    <p class="eq">a(x) = σ<sub>N</sub>(x) &nbsp; and &nbsp; a(x) = g<sub>N</sub>(x) σ<sub>N</sub>(x).</p>
+    <p>Both choose the location with the highest score. The geometric weight g<sub>N</sub> is smaller
+    where uncertainty is systematically inflated. It is computed from reference measurement locations,
+    without using their measured values.</p>
+    <h3>Settings used here</h3>
     <p>Gaussian process with a Matérn-5/2 kernel and lengthscale 0.268 on the unit square, with negligible noise
-    (10<sup>−8</sup>). The score on the left is the posterior standard deviation σ(x); on the right it is
-    g<sub>N</sub>(x) · σ(x), where g<sub>N</sub> is the geometric weight from our optimization paper for N
-    measurements. Blue shows the score, and the next point is the best of a 61 × 61 grid. The five starting points
+    (10<sup>−8</sup>). We use the geometric weight from our optimization paper.
+    Blue shows the score, and the next point is the best of a 61 × 61 grid. The five starting points
     are a scrambled Sobol sequence. The shaded band is closer than 0.05 to the boundary
     and occupies 19 % of the domain's area.</p>
   </details>
@@ -55,13 +60,13 @@
 
 <section class="story" id="why">
   <p class="eyebrow">The explanation</p>
-  <h2>Near a boundary, a location has fewer neighbours</h2>
-  <p class="demo-text">Measurements reduce uncertainty in their neighbourhood. Near the boundary, part of that
-  neighbourhood lies outside the experimental domain. Averaged over random measurement locations, uncertainty is
+  <h2>Near a boundary, a location has fewer neighbors</h2>
+  <p class="demo-text">Measurements reduce uncertainty in their neighborhood. Near the boundary, part of that
+  neighborhood lies outside the experimental domain. Averaged over random measurement locations, uncertainty is
   therefore higher near edges and corners.</p>
   <div class="stage">
     <div class="bar" style="margin-top:0">
-      <span class="seg big" id="why-pos" role="group" aria-label="Position of the marker"><button data-v="centre">Centre</button><button data-v="edge">Edge</button><button data-v="corner">Corner</button></span>
+      <span class="seg big" id="why-pos" role="group" aria-label="Position of the marker"><button data-v="centre">Center</button><button data-v="edge">Edge</button><button data-v="corner">Corner</button></span>
       <span class="seg" id="why-view" role="group" aria-label="Which uncertainty to show"><button data-v="avg">Average of many sets</button><button data-v="one">One set</button></span>
       <button id="why-new">New set</button>
     </div>
@@ -74,12 +79,21 @@
       <p class="say" id="why-say"></p>
     </div>
   </div>
-  <p class="takeaway">Individual measurement sets can obscure this pattern; averaging reveals the systematic effect.</p>
+  <p class="takeaway">The uncertainty pattern changes with the measurement locations. Across many sets, the same pattern remains: higher uncertainty near edges and corners.</p>
   <details class="math" id="why-more">
-    <summary>Details and settings</summary>
+    <summary>Why uncertainty depends on location</summary>
+    <p>For measurement locations X, a GP has posterior variance</p>
+    <p class="eq">σ²(x) = k(x, x) − k(x, X)[K(X, X) + τ²I]<sup>−1</sup>k(X, x).</p>
+    <p>The first term is the uncertainty before measuring. The second is the reduction from the
+    measurements at X: it depends on their locations, the kernel k, and the noise variance τ².
+    With these fixed, the measured values do not enter this expression.</p>
+    <p>Near a boundary, there are fewer possible measurement locations nearby. Averaging over
+    random sets X reveals the resulting increase in uncertainty. The map shows
+    √E<sub>X</sub>[σ²(x)], rather than an average of the standard deviations.</p>
+    <h3>Settings and cross-section</h3>
     <p>Gaussian process with a Matérn-5/2 kernel and noise variance 0.0025. We average the posterior variance over
-    64 random measurement sets and the eight symmetries of the square. The map shows the square root of this average,
-    expressed in standard-deviation units. For one set, the map is the posterior standard deviation of that set, and
+    64 random measurement sets and the eight symmetries of the square.
+    For one set, the map is the posterior standard deviation of that set, and
     the readout compares with its average over the domain.</p>
     <p>The influence of a measurement fades with distance; the circle has the radius of the lengthscale and is not a
     hard limit. <span id="why-share"></span> The axes can be read as two experimental settings, such as temperature
@@ -149,10 +163,10 @@
 </section>
 
 <details class="words">
-  <summary>Words we use</summary>
+  <summary>Glossary</summary>
   <dl>
     <dt>Gaussian process</dt><dd>A model that predicts a function from a few measurements and says how uncertain each prediction is.</dd>
-    <dt>Kernel, lengthscale</dt><dd>The kernel says how strongly two points inform each other. The lengthscale is the distance over which they do.</dd>
+    <dt>Kernel, lengthscale</dt><dd>The kernel says how strongly two points inform each other. The lengthscale sets how quickly this influence fades with distance.</dd>
     <dt>Acquisition function</dt><dd>A rule that uses the model to give every location a score. The next measurement goes where the score is highest.</dd>
     <dt>Experimental design</dt><dd>Choosing measurements to learn the whole function as well as possible.</dd>
     <dt>Bayesian optimization</dt><dd>Choosing evaluations to find the best value of the function.</dd>
@@ -160,10 +174,10 @@
   </dl>
 </details>
 
-<footer>These are browser demonstrations in two dimensions, with the kernel of the papers and grid-based approximations. The papers contain the full experiments.</footer>
 </div>
 <script src="data/fields.js"></script>
 <script src="js/common.js"></script>
+<script src="js/terms.js"></script>
 <script src="js/gp.js"></script>
 <script src="js/hero.js"></script>
 </body>

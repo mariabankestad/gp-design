@@ -166,11 +166,11 @@
       cuts.push({ values: Array.from(g.subarray(mid * nb, (mid + 1) * nb)), colour: COL[k], noDot: true });
       let lo = Infinity, hi = -Infinity;
       for (const v of g) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
-      GP.heat(sq, g, FIELD_DATA.nb, { lo: 0.3, hi: 1.1 });
+      GP.heat(sq, g, FIELD_DATA.nb, { ramp: "viridis", lo: 0, hi: 1.5 });
       GP.frame(sq);
       outs[k].textContent = `smallest ${lo.toFixed(2)}`;
     });
-    GP.lines(cutCv, cuts, { xStart: 0, xMax: nb - 1, xTick: i => (i / (nb - 1)).toFixed(2), xLabel: "position from the left wall to the right wall, through the centre", yLabel: "weight" });
+    GP.lines(cutCv, cuts, { xStart: 0, xMax: nb - 1, xTick: i => (i / (nb - 1)).toFixed(2), xLabel: "position from the left wall to the right wall, through the center", yLabel: "weight" });
   });
   nIn.oninput = draw;
   window.addEventListener("resize", draw);

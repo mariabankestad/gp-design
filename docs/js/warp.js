@@ -24,6 +24,7 @@
   const rhoCv = q("#w-rho"), mapCv = q("#w-map"), errCv = q("#w-err");
   const fnSel = q("#w-fn"), play = q("#w-play"), count = q("#w-count"), viewSeg = q("#w-view"), scale = q("#w-scale");
   for (const [k, f] of Object.entries(D.functions)) fnSel.add(new Option(f.label, k));
+  fnSel.value = "peaks";
   const prevBox = q("#w-prev");
   let Z, seed = 0, runs, timer = null, view = "points", prev = null, fnKey = fnSel.value;
 

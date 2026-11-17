@@ -84,13 +84,13 @@
     const ref = view === "avg" ? centre : mean, share = shareInside(probe);
     shareOut.textContent = `At the marker, ${Math.round(100 * share)} % of the circle lies inside the allowed settings.`;
     ratioOut.textContent = `${(GP.bilinear(sd, NG, probe[0], probe[1]) / ref).toFixed(2)} ×`;
-    refOut.textContent = view === "avg" ? "the uncertainty at the centre" : "the average uncertainty of this set";
+    refOut.textContent = view === "avg" ? "the uncertainty at the center" : "the average uncertainty of this set";
     const dx = Math.min(probe[0], 1 - probe[0]), dy = Math.min(probe[1], 1 - probe[1]);
     say.innerHTML = share > 0.97
-      ? "<b>At the centre</b>, measurement locations are available in every direction."
+      ? "<b>In the interior</b>, measurement locations are available in every direction."
       : Math.max(dx, dy) > 0.5 * ell
         ? "<b>Near an edge</b>, fewer nearby measurement locations are available. The model is therefore more uncertain here on average."
-        : "<b>Near a corner</b>, the neighbourhood is cut off on two sides. This is where the model is most uncertain on average.";
+        : "<b>Near a corner</b>, the neighborhood is cut off on two sides. This is where the model is most uncertain on average.";
     if (more.open) {
       const line = Array.from({ length: 61 }, (_, i) => GP.bilinear(sd, NG, i / 60, probe[1]) / ref);
       GP.lines(cut, [{ values: line, colour: C.navy, noDot: true }],
