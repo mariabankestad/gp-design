@@ -1,5 +1,7 @@
 # Where to measure next
 
+Page: https://mariabankestad.github.io/gp-design/
+
 Interactive pages for three papers on boundary bias in Gaussian processes:
 
 - Boundary Variance Inflation Causes Acquisition Bias in Gaussian Processes ([paper](https://arxiv.org/abs/2606.07561), [code](https://github.com/mariabankestad/gp-boundary-bias))
