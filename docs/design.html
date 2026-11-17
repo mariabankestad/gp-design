@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experimental design</title>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="page model">
+<nav class="top">
+  <a class="brand" href="index.html">Where to measure next</a>
+  <a href="design.html" class="current">Experimental design</a>
+  <a href="bo.html">Bayesian optimization</a>
+  <span class="spacer"></span>
+  <a href="https://mariabankestad.github.io/">Maria Bånkestad</a>
+</nav>
+<p class="eyebrow" style="margin-top:28px"><a href="index.html">Research project · Where to measure next</a></p>
+<h1>Experimental design</h1>
+<p class="lead">This page follows the second paper of the project. We want to reconstruct a function across its domain from few measurements. Our method addresses two
+separate limitations: a geometric preference for the boundaries, and sampling decisions that ignore the measured
+values. The example below separates their effects.</p>
+
+<section id="warp">
+<h2>1. Different functions, unchanged sampling</h2>
+<div class="explain">
+  <p>Three rules measure the same function from the same 10 starting points (a Sobol sequence). <b>Variance</b> measures where the model
+  is most uncertain. <b>Equalizer</b> multiplies the variance by a precomputed weight that downweights the preference
+  for the edges. <b>Equalizer and warp</b> also computes the variance in coordinates that are stretched where the
+  measurements so far suggest that the function changes quickly.</p>
+</div>
+<p class="hint">Switch functions at the same number of measurements. Variance and the equalizer keep their locations;
+the warp recomputes its sequence from the observations.</p>
+<div class="sticky">
+  <div class="bar">
+    <label>Function <select id="w-fn"></select></label>
+    <button class="main" id="w-play">Play</button>
+    <button id="w-step">Step</button>
+    <button id="w-reset">Reset</button>
+    <button id="w-seed">New starting points</button>
+    <span class="count" id="w-count"></span>
+  </div>
+</div>
+<div>
+  <div class="bar" style="margin-top:10px">
+    <label>Show <span class="seg" id="w-view"><button data-v="points">Function and measurements</button><button data-v="learned">Reconstruction</button><button data-v="error">Reconstruction error</button></span></label>
+    <label><input type="checkbox" id="w-prev"> Outline the previous sequence</label>
+    <span class="spacer"></span>
+    <span class="scale" id="w-scale"></span>
+  </div>
+</div>
+<div class="sq-row n3">
+  <figure><figcaption style="color:#1f4e79">Variance <span id="w-eig-o"></span></figcaption><canvas id="w-eig"></canvas><p class="under state" id="w-eig-s"></p></figure>
+  <figure><figcaption style="color:#1b9e8a">Equalizer <span id="w-eq-o"></span></figcaption><canvas id="w-eq"></canvas><p class="under state" id="w-eq-s"></p></figure>
+  <figure><figcaption style="color:#e8590c">Equalizer and warp <span id="w-eq_warp-o"></span></figcaption><canvas id="w-eq_warp"></canvas><p class="under state" id="w-eq_warp-s"></p></figure>
+</div>
+<div class="chart-wide tight">
+  <canvas id="w-err"></canvas>
+</div>
+<div class="key"><span><i class="x">×</i> starting points</span><span><i style="background:#1f4e79"></i>Variance</span><span><i style="background:#1b9e8a"></i>Equalizer</span><span><i style="background:#e8590c"></i>Equalizer and warp</span><span><i class="o" style="border-color:#5f6770"></i>previous sequence</span></div>
+<p class="takeaway">Correcting the boundary bias changes the geometric preference, but the sequence still ignores
+what was measured. The warp lets the measurements change where we measure next. It only sees the measurements
+collected so far, not the true function.</p>
+<p class="note">The reconstruction fills in every location with the value of its nearest measurement, and the error
+compares it with the true function. This is one run with noisy measurements, so the order of the curves can change
+between functions and starting points. The paper reports averages over many runs and 22 benchmarks.</p>
+
+<h2 id="warpview">2. What the warp changes</h2>
+<div class="explain">
+  <p>We construct the warp from gradients of the model's prediction. Regions assigned a higher density occupy more
+  space in the transformed domain, which changes the correlations used to choose the next measurement.</p>
+</div>
+<div class="sq-row n2 pair">
+  <figure><figcaption>Original coordinates</figcaption><canvas id="w-rho"></canvas></figure>
+  <figure><figcaption>Warped coordinates</figcaption><canvas id="w-map"></canvas></figure>
+</div>
+<div class="key"><span class="scale">uniform level <i class="warm"></i> higher density</span><span><i style="background:#1a1a1a"></i>measurements</span><span><i class="o" style="border-color:#1a1a1a"></i>newest measurement</span><span><i class="dash"></i>the same grid in both views</span></div>
+<p class="takeaway">The warp changes the geometry the acquisition rule works in. It does not simply give steep regions a higher score.</p>
+<p class="note">The views follow the run above. The density never drops below a uniform level, which limits how
+strongly the points can concentrate. The points do not follow the density exactly.</p>
+<details class="math">
+  <summary>The score with equalizer and warp</summary>
+  <p class="eq">a(x) = g<sub>N</sub>(x) · σ²<sub>T</sub>(x)</p>
+  <p>The equalizer g<sub>N</sub>(x) = min(1, v<sub>N</sub>(centre) / v<sub>N</sub>(x)), where v<sub>N</sub> is the
+  posterior variance averaged over reference designs of N points. It is precomputed for the required design sizes
+  and does not depend on the measurements.</p>
+  <p class="eq">ρ(x) = 1 + ‖∇μ(x)‖ / c &nbsp; (in two dimensions)</p>
+  <p>The density ρ uses the gradient of the posterior mean μ, and c is the root-mean-square gradient magnitude over
+  the domain. The map T transports the normalized density to the uniform density, and σ²<sub>T</sub> is the posterior
+  variance of a Gaussian process on the warped inputs T(x).</p>
+</details>
+<p class="paper-ref">Jarl, Sjölund, Scragg, Bånkestad. <i>Correcting Boundary Bias and Observation Independence in Bayesian Experimental Design.</i> 2026.</p>
+<div class="section-links"><a href="https://arxiv.org/abs/2602.01898">Paper</a><a href="https://github.com/DiffUse-AI/warp_gp">Code</a></div>
+</section>
+
+<section id="boundary">
+<h2>3. Why the acquisition rules favour different locations</h2>
+<div class="explain">
+  <p>An acquisition function gives every location a score, and the next measurement goes where the score is highest
+  (the ring). With fixed model settings, the score of these three depends on where the earlier points are, but not on the
+  values measured there. So we can ask where each of them wants to measure without any measured values.</p>
+</div>
+<div class="bar">
+  <button id="b-new">New random points</button>
+  <label>Points <span class="seg" id="b-n"><button data-v="8">8</button><button data-v="15">15</button><button data-v="30">30</button></span></label>
+  <label>Lengthscale <span class="seg" id="b-ell"><button data-v="0.1">0.1</button><button data-v="0.2">0.2</button><button data-v="0.4">0.4</button></span></label>
+  <span class="spacer"></span>
+  <span class="scale">low score <i class="blue"></i> high score</span>
+</div>
+<p class="hint">Click in a panel to add a point. Colours are relative within each panel.</p>
+<div class="sq-row n3">
+  <figure><figcaption class="stack">Variance maximization</figcaption><span class="sub">Measure where the model is most uncertain.</span><canvas class="click" id="b-var"></canvas></figure>
+  <figure><figcaption class="stack">Integrated variance (NIPV)</figcaption><span class="sub">Measure where it reduces the uncertainty over the whole domain the most.</span><canvas class="click" id="b-nipv"></canvas></figure>
+  <figure><figcaption class="stack">Predictive information (EPIG)</figcaption><span class="sub">Measure where it tells the most about predictions over the whole domain.</span><canvas class="click" id="b-epig"></canvas></figure>
+</div>
+<h3>The same choice over 4,000 random sets of points</h3>
+<div class="explain">
+  <p>One set of points shows one choice. Repeating it over many random sets shows the preference of each
+  acquisition function. The maps below show how often the next measurement lands at each location.</p>
+</div>
+<div class="sq-row n3">
+  <figure><figcaption>Variance maximization <span id="b-var-e"></span></figcaption><canvas id="b-var-d"></canvas></figure>
+  <figure><figcaption>NIPV <span id="b-nipv-e"></span></figcaption><canvas id="b-nipv-d"></canvas></figure>
+  <figure><figcaption>EPIG <span id="b-epig-e"></span></figcaption><canvas id="b-epig-d"></canvas></figure>
+</div>
+<div class="bar"><span class="scale">never <i class="warm"></i> often</span>
+  <span class="note" style="margin:0">"At the edge" means closer than 0.05 to it. This band occupies 19 % of the domain's area.</span></div>
+<p class="takeaway">Variance maximization sends the next measurement to the corners and edges. The two integrated
+criteria avoid the edge itself and prefer a band inside the domain. No measured values are used, so this
+preference comes from the model and the shape of the domain alone.</p>
+<details class="math">
+  <summary>The three scores</summary>
+  <p>The model has posterior variance σ²(x) and posterior covariance c(x, x′) after the measurements so far, and
+  the noise variance is τ².</p>
+  <p class="eq">Variance: a(x) = σ²(x)</p>
+  <p class="eq">NIPV: a(x) = average over x′ of c(x, x′)² / (σ²(x) + τ²)</p>
+  <p class="eq">EPIG: a(x) = average over x′ of −½ log(1 − ρ(x, x′)²)</p>
+  <p>Here ρ(x, x′) is the correlation between a noisy measurement at x and one at x′, and x′ runs over the whole
+  domain. None of the three contains a measured value. The paper has the derivations and the same maps for other
+  kernels and dimensions.</p>
+</details>
+<p class="paper-ref">Bånkestad, Jarl, Sjölund. <i>Boundary Variance Inflation Causes Acquisition Bias in Gaussian Processes.</i> 2026.</p>
+<div class="section-links"><a href="https://arxiv.org/abs/2606.07561">Paper</a><a href="https://github.com/mariabankestad/gp-boundary-bias">Code</a></div>
+</section>
+
+<footer style="margin-top:48px">Browser demonstrations with a Matérn-5/2 kernel on the unit square and fixed model settings. The next point is chosen on a grid, and all test functions share one noise level. The papers contain the full experiments.</footer>
+</div>
+<script src="data/density.js"></script>
+<script src="data/design_data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/gp.js"></script>
+<script src="js/boundary.js"></script>
+<script src="js/warp.js"></script>
+</body>
+</html>

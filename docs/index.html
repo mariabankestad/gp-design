@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where to measure next · research project</title>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="page">
+<nav class="top">
+  <a class="brand" href="index.html">Where to measure next</a>
+  <a href="design.html">Experimental design</a>
+  <a href="bo.html">Bayesian optimization</a>
+  <span class="spacer"></span>
+  <a href="https://mariabankestad.github.io/">Maria Bånkestad</a>
+</nav>
+<header class="home opening">
+  <div>
+    <p class="eyebrow">Research project · Active learning and Bayesian optimization</p>
+    <h1>Where to measure next</h1>
+    <p class="lead">Gaussian-process models help us decide where to measure next by predicting both the outcome and
+    its uncertainty. But that uncertainty also depends on the boundaries of the region we can explore. A rule that
+    selects the most uncertain location can therefore favour edges and corners, regardless of the measured values.</p>
+    <p class="lead-sub">In three papers, we study why this happens, how to correct it when learning a whole function,
+    and what it means when searching for the best experimental setting.</p>
+  </div>
+  <figure class="mini" id="top-demo">
+    <p class="eyebrow">The observation</p>
+    <div class="sq-row n2">
+      <div><p class="cap">Measure where the model is most uncertain</p><canvas class="s-plain"></canvas>
+        <p class="under"><b class="s-plain-n"></b> measurements near the boundary</p></div>
+      <div><p class="cap">The same rule with our geometric weight</p><canvas class="s-geo"></canvas>
+        <p class="under"><b class="s-geo-n"></b> measurements near the boundary</p></div>
+    </div>
+    <div class="bar" style="margin-top:8px"><button class="main s-play">Replay</button><button class="s-step">Step</button><button class="s-seed">New starting points</button><span class="count s-count"></span></div>
+    <div class="key"><span><i style="background:#f2b134;border:1px solid #1a1a1a"></i>starting points</span><span><i style="background:#1a1a1a"></i>chosen points</span><span><i class="o"></i>newest point</span></div>
+  </figure>
+</header>
+
+<section class="story" id="observation">
+  <p class="caption">Both rules start from the same five locations (yellow) and select 20 additional points. With
+  fixed model settings, neither uses the measured values. The geometric weight changes the spatial preference of
+  uncertainty-based sampling.</p>
+  <details class="math">
+    <summary>Details</summary>
+    <p>Gaussian process with a Matérn-5/2 kernel and lengthscale 0.268 on the unit square, with negligible noise
+    (10<sup>−8</sup>). The score on the left is the posterior standard deviation σ(x); on the right it is
+    g<sub>N</sub>(x) · σ(x), where g<sub>N</sub> is the geometric weight from our optimization paper for N
+    measurements. Blue shows the score, and the next point is the best of a 61 × 61 grid. The five starting points
+    are a scrambled Sobol sequence. The shaded band is closer than 0.05 to the boundary
+    and occupies 19 % of the domain's area.</p>
+  </details>
+</section>
+
+<section class="story" id="why">
+  <p class="eyebrow">The explanation</p>
+  <h2>Near a boundary, a location has fewer neighbours</h2>
+  <p class="demo-text">Measurements reduce uncertainty in their neighbourhood. Near the boundary, part of that
+  neighbourhood lies outside the experimental domain. Averaged over random measurement locations, uncertainty is
+  therefore higher near edges and corners.</p>
+  <div class="stage">
+    <div class="bar" style="margin-top:0">
+      <span class="seg big" id="why-pos" role="group" aria-label="Position of the marker"><button data-v="centre">Centre</button><button data-v="edge">Edge</button><button data-v="corner">Corner</button></span>
+      <span class="seg" id="why-view" role="group" aria-label="Which uncertainty to show"><button data-v="avg">Average of many sets</button><button data-v="one">One set</button></span>
+      <button id="why-new">New set</button>
+    </div>
+    <div class="why">
+      <p class="result"><b id="why-ratio"></b> <span id="why-ref"></span></p>
+      <figure style="margin:0">
+        <canvas class="sq" id="why-map" tabindex="0" role="img" aria-label="Map of the model's uncertainty over the allowed settings, with a movable circle. Use the arrow keys to move the circle."></canvas>
+        <div class="scale" style="margin-top:4px">less uncertain <i class="blue"></i> more uncertain</div>
+      </figure>
+      <p class="say" id="why-say"></p>
+    </div>
+  </div>
+  <p class="takeaway">Individual measurement sets can obscure this pattern; averaging reveals the systematic effect.</p>
+  <details class="math" id="why-more">
+    <summary>Details and settings</summary>
+    <p>Gaussian process with a Matérn-5/2 kernel and noise variance 0.0025. We average the posterior variance over
+    64 random measurement sets and the eight symmetries of the square. The map shows the square root of this average,
+    expressed in standard-deviation units. For one set, the map is the posterior standard deviation of that set, and
+    the readout compares with its average over the domain.</p>
+    <p>The influence of a measurement fades with distance; the circle has the radius of the lengthscale and is not a
+    hard limit. <span id="why-share"></span> The axes can be read as two experimental settings, such as temperature
+    and pressure. The chart shows the uncertainty along the dashed line through the marker.</p>
+    <div class="controls" style="grid-template-columns:1fr 1fr">
+      <div class="ctrl"><span>Number of measurements</span><output id="why-n-o"></output><input type="range" id="why-n" min="4" max="60" step="1" value="12" aria-label="Number of measurements"></div>
+      <div class="ctrl"><span>Lengthscale</span><output id="why-ell-o"></output><input type="range" id="why-ell" min="0.1" max="0.35" step="0.01" value="0.27" aria-label="Lengthscale"></div>
+    </div>
+    <canvas class="chart" id="why-cut"></canvas>
+  </details>
+  <p class="from">From our study of boundary variance inflation (Bånkestad, Jarl, Sjölund) ·
+    <a href="https://arxiv.org/abs/2606.07561">Paper</a> · <a href="https://github.com/mariabankestad/gp-boundary-bias">Code</a> ·
+    <a href="design.html#boundary">Compare three acquisition functions</a></p>
+</section>
+
+<section class="story objectives">
+  <p class="eyebrow">The implications</p>
+  <h2>What to do about it depends on the objective</h2>
+  <p class="demo-text">When learning a whole function, we need measurements that support accurate predictions
+  across the domain. When optimizing, we want to find the best setting. These different goals change how we should
+  respond to a preference for the boundary.</p>
+  <main class="projects apps">
+    <article>
+      <div class="picture demo-shot"><img src="figures/card_design.png" alt="Measurements on a function with a sharp transition, and the reconstruction from them"></div>
+      <div class="text">
+        <h2>Experimental design</h2>
+        <p class="goal">Learning the whole function</p>
+        <p>With fixed model settings, uncertainty-based sampling ignores the measured values. We combine a geometric
+        correction for boundary bias with a reconstruction warp that uses those values to guide subsequent
+        measurements.</p>
+        <div class="links"><a class="main" href="design.html">Continue: experimental design</a></div>
+        <p class="from">Jarl, Sjölund, Scragg, Bånkestad · <a href="https://arxiv.org/abs/2602.01898">Paper</a> · <a href="https://github.com/DiffUse-AI/warp_gp">Code</a></p>
+      </div>
+    </article>
+    <article>
+      <div class="picture demo-shot"><img src="figures/card_bo.png" alt="Evaluations approaching the best basin of a landscape"></div>
+      <div class="text">
+        <h2>Bayesian optimization</h2>
+        <p class="goal">Finding the best setting</p>
+        <p>A preference for the boundary can help or hinder the search for an optimum. We compare three ways of
+        weighting exploration to understand how this preference changes the search.</p>
+        <div class="links"><a class="main" href="bo.html">Continue: Bayesian optimization</a></div>
+        <p class="from">Bånkestad, Sjölund · <a href="https://arxiv.org/abs/2610.14696">Paper</a> · <a href="https://github.com/mariabankestad/spatial-bo">Code</a></p>
+      </div>
+    </article>
+  </main>
+</section>
+
+<section class="pubs story" id="papers">
+  <h2>Papers</h2>
+  <ul class="papers">
+    <li><b>Boundary Variance Inflation Causes Acquisition Bias in Gaussian Processes</b>
+      <cite>Bånkestad, Jarl, Sjölund. 2026.</cite>
+      <p>The uncertainty of a Gaussian process is larger near the boundary of the domain. We explain why, and show
+      where variance maximization, NIPV and EPIG place measurements because of it.</p>
+      <span><a href="https://arxiv.org/abs/2606.07561">Paper</a><a href="https://github.com/mariabankestad/gp-boundary-bias">Code</a><a href="design.html#boundary">Interactive example</a></span></li>
+    <li><b>Correcting Boundary Bias and Observation Independence in Bayesian Experimental Design</b>
+      <cite>Jarl, Sjölund, Scragg, Bånkestad. 2026.</cite>
+      <p>For learning a function over its whole domain. A precomputed weight reduces the boundary preference, and a
+      warp of the input space makes the next measurement depend on the measured values.</p>
+      <span><a href="https://arxiv.org/abs/2602.01898">Paper</a><a href="https://github.com/DiffUse-AI/warp_gp">Code</a><a href="design.html">Interactive example</a></span></li>
+    <li><b>Understanding Hidden Spatial Preferences in Bayesian Optimization</b>
+      <cite>Bånkestad, Sjölund. 2026.</cite>
+      <p>For optimization. We put a weight on the exploration term of GP-LCB and compare three ways to choose it.</p>
+      <span><a href="https://arxiv.org/abs/2610.14696">Paper</a><a href="https://github.com/mariabankestad/spatial-bo">Code</a><a href="bo.html">Interactive example</a></span></li>
+  </ul>
+</section>
+
+<details class="words">
+  <summary>Words we use</summary>
+  <dl>
+    <dt>Gaussian process</dt><dd>A model that predicts a function from a few measurements and says how uncertain each prediction is.</dd>
+    <dt>Kernel, lengthscale</dt><dd>The kernel says how strongly two points inform each other. The lengthscale is the distance over which they do.</dd>
+    <dt>Acquisition function</dt><dd>A rule that uses the model to give every location a score. The next measurement goes where the score is highest.</dd>
+    <dt>Experimental design</dt><dd>Choosing measurements to learn the whole function as well as possible.</dd>
+    <dt>Bayesian optimization</dt><dd>Choosing evaluations to find the best value of the function.</dd>
+    <dt>Boundary bias</dt><dd>The preference of an acquisition function for the edges of the domain, caused by the shape of the domain and not by the measured values.</dd>
+  </dl>
+</details>
+
+<footer>These are browser demonstrations in two dimensions, with the kernel of the papers and grid-based approximations. The papers contain the full experiments.</footer>
+</div>
+<script src="data/fields.js"></script>
+<script src="js/common.js"></script>
+<script src="js/gp.js"></script>
+<script src="js/hero.js"></script>
+</body>
+</html>

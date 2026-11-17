@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayesian optimization</title>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="page model">
+<nav class="top">
+  <a class="brand" href="index.html">Where to measure next</a>
+  <a href="design.html">Experimental design</a>
+  <a href="bo.html" class="current">Bayesian optimization</a>
+  <span class="spacer"></span>
+  <a href="https://mariabankestad.github.io/">Maria Bånkestad</a>
+</nav>
+<p class="eyebrow" style="margin-top:28px"><a href="index.html">Research project · Where to measure next</a></p>
+<h1>Bayesian optimization</h1>
+<p class="lead">This page follows the third paper of the project. The goal is to find the best value of a function in few evaluations. An acquisition rule balances the
+model's prediction against its uncertainty. Because the uncertainty tends to be larger near the walls, the rule tends
+to explore there first. We put a weight on the exploration term to choose where it explores instead.</p>
+
+<section id="bo">
+<h2>1. Four exploration rules on the same problem</h2>
+<div class="explain">
+  <p>All four rules start from the same four evaluations and share the prediction model. They differ in the
+  exploration bonus. The first three landscapes have the same four basins, with the best one in the interior, at a
+  wall, or in a corner.</p>
+</div>
+<p class="hint">Move the best basin with the landscape menu, then press Play.</p>
+<div class="bar" style="margin-top:10px">
+  <label>Show <span class="seg" id="bo-view"><button data-v="landscape">Landscape</button><button data-v="mean">Model's prediction</button></span></label>
+  <label>Exploration λ <input type="range" id="bo-lam" min="0.5" max="4" step="0.1" value="3"><output id="bo-lam-o"></output></label>
+</div>
+<div class="sticky">
+  <div class="bar">
+    <label>Landscape <select id="bo-fn"></select></label>
+    <button class="main" id="bo-play">Play</button>
+    <button id="bo-step">Step</button>
+    <button id="bo-reset">Reset</button>
+    <button id="bo-seed">New starting points</button>
+    <span class="count" id="bo-count"></span>
+  </div>
+</div>
+<div class="sq-row n4 tight">
+  <figure><figcaption style="color:#2a78d6">Standard GP-LCB</figcaption><canvas id="bo-lcb"></canvas><p class="under" id="bo-lcb-o"></p></figure>
+  <figure><figcaption style="color:#eb6834">Geometric</figcaption><canvas id="bo-geo"></canvas><p class="under" id="bo-geo-o"></p></figure>
+  <figure><figcaption style="color:#c98700">Uniform</figcaption><canvas id="bo-uniform"></canvas><p class="under" id="bo-uniform-o"></p></figure>
+  <figure><figcaption style="color:#1baf7a">Efficiency</figcaption><canvas id="bo-eff"></canvas><p class="under" id="bo-eff-o"></p></figure>
+</div>
+<div class="chart-wide tight">
+  <canvas id="bo-regret"></canvas>
+</div>
+<div class="key"><span><i class="x">×</i> starting evaluations</span><span><i style="background:#2a78d6"></i>Standard GP-LCB</span><span><i style="background:#eb6834"></i>Geometric</span><span><i style="background:#c98700"></i>Uniform</span><span><i style="background:#1baf7a"></i>Efficiency</span><span><i style="background:#e8590c;border:1px solid #fff;outline:1px solid #e8590c"></i>next proposed evaluation</span><span><i class="o" style="border-color:#1a1a1a"></i>best location</span></div>
+<dl class="rules">
+  <dt style="color:#2a78d6">Standard GP-LCB</dt><dd>Unweighted uncertainty bonus.</dd>
+  <dt style="color:#eb6834">Geometric</dt><dd>Balances the average exploration strength across locations.</dd>
+  <dt style="color:#c98700">Uniform</dt><dd>Balances where pure exploration selects points.</dd>
+  <dt style="color:#1baf7a">Efficiency</dt><dd>Favours evaluations that inform more of the domain.</dd>
+</dl>
+<p class="note">In the landscape, lighter means a better value. Regret is the distance from the best value found so far
+to the best possible value. "At wall" counts evaluations closer than 0.05 to the edge.</p>
+
+<p class="takeaway">Each rule has a spatial preference, and whether it helps depends on where the good solutions lie.
+A boundary preference can help when they lie near an edge.</p>
+<p class="note">This is one run, so the result also depends on the starting points. The paper reports averages over
+many runs.</p>
+</section>
+
+<section id="parts">
+<h2>2. Which part chose this point?</h2>
+<div class="explain">
+  <p>The score of a location is the predicted value plus λ times an exploration bonus. The next evaluation goes where
+  the sum is highest. That is not always where the bonus is largest.</p>
+</div>
+<div class="sticky">
+<div class="bar">
+  <label>Rule <span class="seg" id="p-rule"><button data-v="0">Standard GP-LCB</button><button data-v="1">Geometric</button><button data-v="2">Uniform</button><button data-v="3">Efficiency</button></span></label>
+  <label>Exploration λ <input type="range" id="p-lam" min="0.5" max="4" step="0.1" value="3"><output id="p-lam-o"></output></label>
+  <button class="main" id="p-take">Advance all four rules</button>
+</div>
+</div>
+<p class="hint">Move λ: the proposed evaluation moves at once, and nothing is evaluated.</p>
+<div class="sq-row n3">
+  <figure><figcaption class="op">Predicted value</figcaption><canvas id="p-mu"></canvas><p class="under">Lighter is better.</p></figure>
+  <figure><figcaption class="op">+ λ × exploration bonus</figcaption><canvas id="p-e"></canvas><p class="under">Darker is larger.</p></figure>
+  <figure><figcaption class="op">= score</figcaption><canvas id="p-a"></canvas><p class="under">Darker is higher.</p></figure>
+</div>
+<p class="takeaway" id="p-say"></p>
+<div class="key"><span><i style="background:#1a1a1a"></i>evaluations so far</span><span><i style="background:#e8590c"></i>next proposed evaluation</span><span><i class="sqr"></i>highest value in the panel</span></div>
+<p class="note">The panels follow the run in part 1. Colours are relative within each panel.</p>
+<details class="math">
+  <summary>The score</summary>
+  <p class="eq">a(x) = μ(x) + λ · g<sub>N</sub>(x) / c · σ(x)</p>
+  <p>μ is the predicted value and σ the model's uncertainty. The weight g<sub>N</sub> depends on the location and on
+  the number N of evaluations, and c is its average over the evaluated points. Standard GP-LCB has g = 1.</p>
+  <p>All rules take μ from a Gaussian process whose lengthscale is fitted in every round. Standard GP-LCB takes σ
+  from the same model. The weighted rules take σ from a kernel with a fixed reference lengthscale, the one the
+  weights were computed for.</p>
+</details>
+</section>
+
+<section id="fields">
+<h2>3. The three weights</h2>
+<div class="explain">
+  <p>Each weight follows one principle. The weights depend on the location, the number of evaluations so far and the
+  lengthscale, but not on the function, so we precompute them.</p>
+</div>
+<div class="bar">
+  <label>Number of evaluations <input type="range" id="f-n" step="1" value="12"><output id="f-n-o"></output></label>
+</div>
+<div class="sq-row n3">
+  <figure><figcaption>Geometric <span id="f-geo-o"></span></figcaption><canvas id="f-geo"></canvas>
+    <p class="under">The exploration term is, on average, equally large everywhere in the domain.</p></figure>
+  <figure><figcaption>Uniform <span id="f-uniform-o"></span></figcaption><canvas id="f-uniform"></canvas>
+    <p class="under">A pure exploration step is about equally likely to land anywhere.</p></figure>
+  <figure><figcaption>Efficiency <span id="f-eff-o"></span></figcaption><canvas id="f-eff"></canvas>
+    <p class="under">Favors uncertainty that, once removed, reduces more uncertainty elsewhere.</p></figure>
+</div>
+<div class="bar"><span class="scale">small weight <i class="blue"></i> large weight</span><span class="note" style="margin:0">Each weight equals 1 at the centre.</span></div>
+<div class="chart-wide">
+  <canvas id="f-cut"></canvas>
+  <div class="key"><span><i style="background:#eb6834"></i>Geometric</span><span><i style="background:#c98700"></i>Uniform</span><span><i style="background:#1baf7a"></i>Efficiency</span></div>
+</div>
+<p class="takeaway">The three weights agree in the interior and differ near the walls, where they decide how much exploration the boundary receives.</p>
+<p class="paper-ref">Bånkestad, Sjölund. <i>Understanding Hidden Spatial Preferences in Bayesian Optimization.</i> 2026.</p>
+<div class="section-links"><a href="https://arxiv.org/abs/2610.14696">Paper</a><a href="https://github.com/mariabankestad/spatial-bo">Code</a></div>
+</section>
+
+<footer style="margin-top:48px">Browser demonstrations with a Matérn-5/2 kernel on the unit square. The next evaluation is chosen on a grid, and the lengthscale is fitted on a grid of values. The paper contains the full experiments.</footer>
+</div>
+<script src="data/fields.js"></script>
+<script src="data/bo_data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/gp.js"></script>
+<script src="js/bo.js"></script>
+</body>
+</html>
